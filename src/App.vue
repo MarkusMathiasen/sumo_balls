@@ -1,5 +1,5 @@
 <script setup>
-import GameArena from './GameArena.vue'
+import GameArena from './components/GameArena.vue'
 import { ref } from 'vue'
 
 const redPoints = ref(0);
