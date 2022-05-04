@@ -1,125 +1,122 @@
-<script>
+<script setup>
 import Ball from './Ball.vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 
-export default {
-  components: {
-    Ball
+const props = defineProps({
+  width: {
+    type: Number,
+    required: true
   },
-  props: {
-    width: {
-      type: Number,
-      required: true
-    },
-    height: {
-      type: Number,
-      required: true
-    },
-    ballRadius: {
-      type: Number,
-      default: 50
-    },
-    acceleration: {
-      type: Number,
-      default: 0.3
-    }
+  height: {
+    type: Number,
+    required: true
   },
-  emits: ['redDead', 'blueDead'],
-  data() {
-    return {
-      interval: null,
-      ctx: null,
-      keysPressed: []
-    }
+  ballRadius: {
+    type: Number,
+    default: 50
   },
-  computed: {
-    balls() {
-      return [this.$refs.redBall, this.$refs.blueBall];
-    }
-  },
-  mounted() {
-    this.ctx = this.$refs.canvas.getContext("2d");
-    window.addEventListener('keydown', this.keydown);
-    window.addEventListener('keyup', this.keyup);
-    this.setup();
-  },
-  methods: {
-    keydown(e) {
-      this.keysPressed[e.keyCode] = true;
-    },
-    keyup(e) {
-      this.keysPressed[e.keyCode] = false;
-    },
-    sleep(ms) {  
-      return new Promise(resolve => setTimeout(resolve, ms));  
-    },
-    setup() {
-      for (let ball of this.balls) {
-        ball.speed_x = 0;
-        ball.speed_y = 0;
-        ball.y = this.height/2;
-      }
-      this.$refs.redBall.x = this.width/4;
-      this.$refs.blueBall.x = 3*this.width/4;
-      this.ctx.clearRect(0, 0, this.width, this.height);
-      for (let ball of this.balls)
-        ball.draw(this.ctx);
-      this.interval = setInterval(this.update, 20);
-    },
-    update() {
-      for (let ball of this.balls)
-        ball.undraw(this.ctx);
-      this.updateSpeeds();
-      this.checkCollision();
-      this.updatePositions();
-      for (let ball of this.balls)
-        ball.draw(this.ctx);
-    },
-    updateSpeeds() {
-      if (this.keysPressed[37]) this.$refs.blueBall.speed_x -= this.acceleration;
-      if (this.keysPressed[38]) this.$refs.blueBall.speed_y -= this.acceleration;
-      if (this.keysPressed[39]) this.$refs.blueBall.speed_x += this.acceleration;
-      if (this.keysPressed[40]) this.$refs.blueBall.speed_y += this.acceleration;
+  acceleration: {
+    type: Number,
+    default: 0.3
+  }
+});
 
-      if (this.keysPressed[65]) this.$refs.redBall.speed_x -= this.acceleration;
-      if (this.keysPressed[87]) this.$refs.redBall.speed_y -= this.acceleration;
-      if (this.keysPressed[68]) this.$refs.redBall.speed_x += this.acceleration;
-      if (this.keysPressed[83]) this.$refs.redBall.speed_y += this.acceleration;
-    },
-    checkCollision() {
-      let dx = this.$refs.blueBall.x - this.$refs.redBall.x;
-      let dy = this.$refs.blueBall.y - this.$refs.redBall.y;
-      let dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist <= 2*this.ballRadius) {
-        let cos = dx / dist;
-        let sin = dy / dist;
-        let add_1 = this.$refs.redBall.speed_x*cos + this.$refs.redBall.speed_y*sin;
-        let add_1x = add_1*cos;
-        let add_1y = add_1*sin;
-        let add_0 = this.$refs.blueBall.speed_x*cos + this.$refs.blueBall.speed_y*sin;
-        let add_0x = add_0*cos;
-        let add_0y = add_0*sin;
-        this.$refs.redBall.speed_x += add_0x - add_1x;
-        this.$refs.redBall.speed_y += add_0y - add_1y;
-        this.$refs.blueBall.speed_x += add_1x - add_0x;
-        this.$refs.blueBall.speed_y += add_1y - add_0y;
-      }
-    },
-    async updatePositions() {
-      for (let ball of this.balls) {
-        ball.x += ball.speed_x;
-        ball.y += ball.speed_y;
-        if (ball.x + this.ballRadius > this.width
-        || ball.x - this.ballRadius < 0
-        || ball.y + this.ballRadius > this.height
-        || ball.y - this.ballRadius < 0) {
-          clearInterval(this.interval);
-          await this.sleep(1500);
-          this.$emit(ball.color + 'Dead');
-        }
-      }
+const emit = defineEmits(['redDead', 'blueDead']);
+const keysPressed = [];
+let interval = null;
+let ctx = null;
+
+const redBall = ref(null);
+const blueBall = ref(null);
+const canvas = ref(null);
+
+const balls = computed(() => {return [redBall, blueBall]});
+
+onMounted(() => {
+  ctx = reactive(canvas.value.getContext("2d"));
+  window.addEventListener('keydown', keydown);
+  window.addEventListener('keyup', keyup);
+  setupArena();
+});
+
+function keydown(e) {
+  keysPressed[e.keyCode] = true;
+}
+function keyup(e) {
+  keysPressed[e.keyCode] = false;
+}
+function sleep(ms) {  
+  return new Promise(resolve => setTimeout(resolve, ms));  
+}
+function setupArena() {
+  for (let ball of balls.value) {
+    ball.value.speed_x = 0;
+    ball.value.speed_y = 0;
+    ball.value.y = props.height/2;
+  }
+  redBall.value.x = props.width/4;
+  blueBall.value.x = 3*props.width/4;
+  ctx.clearRect(0, 0, props.width, props.height);
+  for (let ball of balls.value)
+    ball.value.draw(ctx);
+  interval = setInterval(update, 20);
+}
+function update() {
+  for (let ball of balls.value)
+    ball.value.undraw(ctx);
+  updateSpeeds();
+  checkCollision();
+  updatePositions();
+  for (let ball of balls.value)
+    ball.value.draw(ctx);
+}
+function updateSpeeds() {
+  if (keysPressed[37]) blueBall.value.speed_x -= props.acceleration;
+  if (keysPressed[38]) blueBall.value.speed_y -= props.acceleration;
+  if (keysPressed[39]) blueBall.value.speed_x += props.acceleration;
+  if (keysPressed[40]) blueBall.value.speed_y += props.acceleration;
+
+  if (keysPressed[65]) redBall.value.speed_x -= props.acceleration;
+  if (keysPressed[87]) redBall.value.speed_y -= props.acceleration;
+  if (keysPressed[68]) redBall.value.speed_x += props.acceleration;
+  if (keysPressed[83]) redBall.value.speed_y += props.acceleration;
+}
+function checkCollision() {
+  let dx = blueBall.value.x - redBall.value.x;
+  let dy = blueBall.value.y - redBall.value.y;
+  let dist = Math.sqrt(dx*dx + dy*dy);
+  if (dist <= 2*props.ballRadius) {
+    let cos = dx / dist;
+    let sin = dy / dist;
+    let add_1 = redBall.value.speed_x*cos + redBall.value.speed_y*sin;
+    let add_1x = add_1*cos;
+    let add_1y = add_1*sin;
+    let add_0 = blueBall.value.speed_x*cos + blueBall.value.speed_y*sin;
+    let add_0x = add_0*cos;
+    let add_0y = add_0*sin;
+    redBall.value.speed_x += add_0x - add_1x;
+    redBall.value.speed_y += add_0y - add_1y;
+    blueBall.value.speed_x += add_1x - add_0x;
+    blueBall.value.speed_y += add_1y - add_0y;
+  }
+}
+async function updatePositions() {
+  for (let ball of balls.value) {
+    ball.value.x += ball.value.speed_x;
+    ball.value.y += ball.value.speed_y;
+    if (ball.value.x + props.ballRadius > props.width
+    || ball.value.x - props.ballRadius < 0
+    || ball.value.y + props.ballRadius > props.height
+    || ball.value.y - props.ballRadius < 0) {
+      clearInterval(interval);
+      await sleep(1500);
+     emit(ball.value.getColor() + 'Dead');
     }
   }
 }
+defineExpose({
+  setupArena
+});
 </script>
 
 <template>

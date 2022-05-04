@@ -7,7 +7,7 @@ const bluePoints = ref(0);
 const arena = ref(null);
 
 function setupArena() {
-  console.log(arena.ctx);
+  arena.value.setupArena();
 }
 function redDead() {
   bluePoints.value++;
