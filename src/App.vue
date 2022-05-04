@@ -1,34 +1,26 @@
-<script>
+<script setup>
 import GameArena from './GameArena.vue'
+import { ref } from 'vue'
 
-export default {
-  components: {
-    GameArena
-  },
-  data() {
-    return {
-      redPoints: 0,
-      bluePoints: 0
-    }
-  },
-  methods: {
-    setupArena() {
-      this.$refs.arena.setup();
-    },
-    redDead() {
-      this.redPoints++;
-      this.setupArena();
-    },
-    blueDead() {
-      this.bluePoints++;
-      this.setupArena();
-    }
-  }
+const redPoints = ref(0);
+const bluePoints = ref(0);
+const arena = ref(null);
+
+function setupArena() {
+  console.log(arena.ctx);
+}
+function redDead() {
+  bluePoints.value++;
+  setupArena();
+}
+function blueDead() {
+  redPoints.value++;
+  setupArena();
 }
 </script>
 
 <template>
-  <GameArena ref="arena" :width="1700" :height="700" @redDead="redDead()" @blueDead="blueDead()" />
+  <GameArena ref="arena" :width="1500" :height="700" @redDead="redDead()" @blueDead="blueDead()" />
   <h3>Blue points: {{bluePoints}}</h3>
   <h3>Red points: {{redPoints}}</h3>
 </template>
