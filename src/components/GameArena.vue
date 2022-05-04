@@ -1,5 +1,5 @@
 <script setup>
-import Ball from './Ball.vue'
+import { useBall } from '../composables/ball.js'
 import { ref, reactive, computed, onMounted } from 'vue'
 
 const props = defineProps({
@@ -26,91 +26,76 @@ const keysPressed = [];
 let interval = null;
 let ctx = null;
 
-const redBall = ref(null);
-const blueBall = ref(null);
+let redBall = null;
+let blueBall = null;
+let balls = [];
+
 const canvas = ref(null);
 
-const balls = computed(() => {return [redBall, blueBall]});
-
 onMounted(() => {
-  ctx = reactive(canvas.value.getContext("2d"));
-  window.addEventListener('keydown', keydown);
-  window.addEventListener('keyup', keyup);
+  ctx = canvas.value.getContext("2d");
+  redBall = reactive(useBall(ctx, props.ballRadius, 'red', props.acceleration, {up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD'}));
+  blueBall = reactive(useBall(ctx, props.ballRadius, 'blue', props.acceleration, {up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight'}));
+  balls = [redBall, blueBall];
   setupArena();
 });
 
-function keydown(e) {
-  keysPressed[e.keyCode] = true;
-}
-function keyup(e) {
-  keysPressed[e.keyCode] = false;
-}
 function sleep(ms) {  
   return new Promise(resolve => setTimeout(resolve, ms));  
 }
 function setupArena() {
-  for (let ball of balls.value) {
-    ball.value.speed_x = 0;
-    ball.value.speed_y = 0;
-    ball.value.y = props.height/2;
+  for (let ball of balls) {
+    ball.speed_x = 0;
+    ball.speed_y = 0;
+    ball.y = props.height/2;
   }
-  redBall.value.x = props.width/4;
-  blueBall.value.x = 3*props.width/4;
+  redBall.x = props.width/4;
+  blueBall.x = 3*props.width/4;
   ctx.clearRect(0, 0, props.width, props.height);
-  for (let ball of balls.value)
-    ball.value.draw(ctx);
+  for (let ball of balls)
+    ball.draw();
   interval = setInterval(update, 20);
 }
-function update() {
-  for (let ball of balls.value)
-    ball.value.undraw(ctx);
-  updateSpeeds();
-  checkCollision();
-  updatePositions();
-  for (let ball of balls.value)
-    ball.value.draw(ctx);
-}
-function updateSpeeds() {
-  if (keysPressed[37]) blueBall.value.speed_x -= props.acceleration;
-  if (keysPressed[38]) blueBall.value.speed_y -= props.acceleration;
-  if (keysPressed[39]) blueBall.value.speed_x += props.acceleration;
-  if (keysPressed[40]) blueBall.value.speed_y += props.acceleration;
 
-  if (keysPressed[65]) redBall.value.speed_x -= props.acceleration;
-  if (keysPressed[87]) redBall.value.speed_y -= props.acceleration;
-  if (keysPressed[68]) redBall.value.speed_x += props.acceleration;
-  if (keysPressed[83]) redBall.value.speed_y += props.acceleration;
+function update() {
+  for (let ball of balls)
+    ball.undraw();
+  for (let ball of balls)
+    ball.update();
+  for (let ball of balls)
+    ball.draw();
+  handleBallCollision();
+  handleEdgeCollision();
 }
-function checkCollision() {
-  let dx = blueBall.value.x - redBall.value.x;
-  let dy = blueBall.value.y - redBall.value.y;
+
+function handleBallCollision() {
+  let dx = blueBall.x - redBall.x;
+  let dy = blueBall.y - redBall.y;
   let dist = Math.sqrt(dx*dx + dy*dy);
   if (dist <= 2*props.ballRadius) {
     let cos = dx / dist;
     let sin = dy / dist;
-    let add_1 = redBall.value.speed_x*cos + redBall.value.speed_y*sin;
+    let add_1 = redBall.speed_x*cos + redBall.speed_y*sin;
     let add_1x = add_1*cos;
     let add_1y = add_1*sin;
-    let add_0 = blueBall.value.speed_x*cos + blueBall.value.speed_y*sin;
+    let add_0 = blueBall.speed_x*cos + blueBall.speed_y*sin;
     let add_0x = add_0*cos;
     let add_0y = add_0*sin;
-    redBall.value.speed_x += add_0x - add_1x;
-    redBall.value.speed_y += add_0y - add_1y;
-    blueBall.value.speed_x += add_1x - add_0x;
-    blueBall.value.speed_y += add_1y - add_0y;
+    redBall.speed_x += add_0x - add_1x;
+    redBall.speed_y += add_0y - add_1y;
+    blueBall.speed_x += add_1x - add_0x;
+    blueBall.speed_y += add_1y - add_0y;
   }
 }
-async function updatePositions() {
-  for (let ball of balls.value) {
-    ball.value.x += ball.value.speed_x;
-    ball.value.y += ball.value.speed_y;
-    if (ball.value.x + props.ballRadius > props.width
-    || ball.value.x - props.ballRadius < 0
-    || ball.value.y + props.ballRadius > props.height
-    || ball.value.y - props.ballRadius < 0) {
+async function handleEdgeCollision() {
+  for (let ball of balls) {
+    if (ball.x + props.ballRadius > props.width
+    || ball.x - props.ballRadius < 0
+    || ball.y + props.ballRadius > props.height
+    || ball.y - props.ballRadius < 0) {
       clearInterval(interval);
       await sleep(1500);
-     emit(ball.value.getColor() + 'Dead');
+     emit(ball.color + 'Dead');
     }
   }
 }
@@ -120,10 +105,7 @@ defineExpose({
 </script>
 
 <template>
-  <canvas :width="width" :height="height" ref="canvas">
-    <Ball ref="redBall" :radius="ballRadius" color="red" />
-    <Ball ref="blueBall" :radius="ballRadius" color="blue" />
-  </canvas>
+  <canvas :width="width" :height="height" ref="canvas"></canvas>
 </template>
 
 <style>

@@ -1,4 +1,12 @@
-import { unref } from "vue";
+import { ref } from "vue";
+
+const keysPressed = {};
+window.addEventListener('keydown', (e) => {
+  keysPressed[e.code] = true;
+});
+window.addEventListener('keyup', (e) => {
+  keysPressed[e.code] = false;
+});
 
 export function useBall(ctx, radius, color, acceleration, keys) {
   const x = ref(0);
@@ -13,26 +21,31 @@ export function useBall(ctx, radius, color, acceleration, keys) {
     ctx.fill();
   }
 
-  function undraw(ctx) {
+  function undraw() {
     ctx.clearRect(x.value-radius-2, y.value-radius-2, radius*2+4, radius*2+4);
   }
 
   function updateSpeed() {
-    if (unref(keys).up) speed_y.value += acceleration;
-    if (unref(keys).down) speed_y.value -= acceleration;
-    if (unref(keys).left) speed_x.value -= acceleration;
-    if (unref(keys).right) speed_x.value += acceleration;
+    if (keysPressed[keys.up]) speed_y.value -= acceleration;
+    if (keysPressed[keys.down]) speed_y.value += acceleration;
+    if (keysPressed[keys.left]) speed_x.value -= acceleration;
+    if (keysPressed[keys.right]) speed_x.value += acceleration;
   }
 
   function updatePosition() {
-    x.value += speed_x;
-    y.value += speed_y;
+    x.value += speed_x.value;
+    y.value += speed_y.value;
+  }
+
+  function update() {
+    updateSpeed();
+    updatePosition();
   }
 
   return {
     x, y,
     speed_x, speed_y,
     color,
-    draw, undraw,
+    draw, undraw, update,
   }
 }
