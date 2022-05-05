@@ -1,4 +1,4 @@
-import { ref } from "vue";
+import { reactive, ref } from "vue";
 
 const keysPressed = {};
 window.addEventListener('keydown', (e) => {
@@ -42,10 +42,10 @@ export function useBall(ctx, radius, color, acceleration, keys) {
     updatePosition();
   }
 
-  return {
+  return reactive({
     x, y,
     speed_x, speed_y,
     color,
     draw, undraw, update,
-  }
+  });
 }

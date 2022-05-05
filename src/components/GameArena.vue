@@ -34,8 +34,8 @@ const canvas = ref(null);
 
 onMounted(() => {
   ctx = canvas.value.getContext("2d");
-  redBall = reactive(useBall(ctx, props.ballRadius, 'red', props.acceleration, {up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD'}));
-  blueBall = reactive(useBall(ctx, props.ballRadius, 'blue', props.acceleration, {up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight'}));
+  redBall = useBall(ctx, props.ballRadius, 'red', props.acceleration, {up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD'});
+  blueBall = useBall(ctx, props.ballRadius, 'blue', props.acceleration, {up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight'});
   balls = [redBall, blueBall];
   setupArena();
 });
