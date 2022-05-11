@@ -1,28 +1,20 @@
 <script setup>
-import GameArena from './components/GameArena.vue'
-import { ref } from 'vue'
 
-const redPoints = ref(0);
-const bluePoints = ref(0);
-const arena = ref(null);
-
-function setupArena() {
-  arena.value.setupArena();
-}
-function redDead() {
-  bluePoints.value++;
-  setupArena();
-}
-function blueDead() {
-  redPoints.value++;
-  setupArena();
-}
 </script>
 
 <template>
-  <div class="section">
-    <GameArena ref="arena" :width="1500" :height="700" @redDead="redDead()" @blueDead="blueDead()" />
-    <h3 class="title">Blue points: {{bluePoints}}</h3>
-    <h3 class="title">Red points: {{redPoints}}</h3>
+<section class="hero is-primary is-fullheight">
+  <div class="hero-head">
+    <div class="container has-text-centered">
+      <h1 class="title is-1 is-family-sans-serif"> Sumo Balls </h1>
+    </div>
   </div>
+hej
+</section>
 </template>
+
+<style>
+html {
+  overflow-y: hidden;
+}
+</style>
