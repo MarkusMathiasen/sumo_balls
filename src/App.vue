@@ -20,7 +20,9 @@ function blueDead() {
 </script>
 
 <template>
-  <GameArena ref="arena" :width="1500" :height="700" @redDead="redDead()" @blueDead="blueDead()" />
-  <h3>Blue points: {{bluePoints}}</h3>
-  <h3>Red points: {{redPoints}}</h3>
+  <div class="section">
+    <GameArena ref="arena" :width="1500" :height="700" @redDead="redDead()" @blueDead="blueDead()" />
+    <h3 class="title">Blue points: {{bluePoints}}</h3>
+    <h3 class="title">Red points: {{redPoints}}</h3>
+  </div>
 </template>
